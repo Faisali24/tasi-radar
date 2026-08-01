@@ -529,7 +529,20 @@ function renderSecbar(){
 function renderAll(){renderTop();render();}
 
 /* ---------- تصدير CSV ---------- */
-document.getElementById('csvBtn').onclick=()=>{
+document.getElementById('csvBtn').onclick=async()=>{
+  // على الموقع المستضاف: ملف إكسل حقيقي منسق يولَّد يومياً في السحابة
+  if(selDate===DATES[0] && location.protocol.startsWith('http')){
+    try{
+      const r=await fetch('radar.xlsx',{method:'HEAD'});
+      if(r.ok){
+        const a=document.createElement('a');
+        a.href='radar.xlsx';
+        a.download='رادار-تاسي-'+DATA.dataDate+'.xlsx';
+        document.body.appendChild(a); a.click(); a.remove();
+        return;
+      }
+    }catch(err){}
+  }
   const cols=[['الرمز',({s})=>s.code],['الشركة',({s})=>s.name],['القطاع',({s})=>s.sector],
     ['السعر',({e})=>e.price],['التغير %',({e})=>e.chg],['الاتجاه',({e})=>e.dirTxt],['RSI',({e})=>e.rsi],
     ['هدف 2',({e})=>e.t2],['هدف 1',({e})=>e.t1],['اختراق',({e})=>e.brk],
@@ -538,7 +551,7 @@ document.getElementById('csvBtn').onclick=()=>{
     ['هدف تحت 1',({e})=>e.td1],['هدف تحت 2',({e})=>e.td2],
     ['عكس الاتجاه',({e})=>e.rev],['تأكيد العكس',({e})=>e.revc]];
   const rows=filtered();
-  const csv='﻿'+[cols.map(c=>c[0]).join(',')]
+  const csv='﻿sep=,\r\n'+[cols.map(c=>c[0]).join(',')]
     .concat(rows.map(x=>cols.map(c=>{const v=c[1](x);return v==null?'':v;}).join(','))).join('\r\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
